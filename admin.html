@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Food Order Admin</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+    min-height:100vh;
+    background:
+    linear-gradient(180deg,#f8fafc 0%,#eef2f7 100%);
+    color:#1f2937;
+    padding:18px;
+}
+
+.login-box{
+    max-width:400px;
+    margin:auto;
+    background:#ffffff;
+    border:1px solid #e5e7eb;
+    padding:24px;
+    border-radius:10px;
+    box-shadow:0 14px 30px rgba(15,23,42,.12);
+    margin-top:40px;
+}
+
+h2{
+    margin-bottom:15px;
+    text-align:center;
+    color:#111827;
+    line-height:1.25;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    margin-bottom:10px;
+    border:1px solid #d1d5db;
+    border-radius:8px;
+    color:#111827;
+    font-size:15px;
+    outline:none;
+}
+
+input:focus{
+    border-color:#0f766e;
+    box-shadow:0 0 0 3px rgba(15,118,110,.12);
+}
+
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    margin-top:5px;
+    font-size:15px;
+    font-weight:700;
+    letter-spacing:0;
+    transition:background .2s ease,transform .2s ease,box-shadow .2s ease;
+}
+
+button:hover{
+    transform:translateY(-1px);
+}
+
+.login-btn{
+    background:#0f766e;
+    color:#fff;
+    box-shadow:0 6px 14px rgba(15,118,110,.18);
+}
+
+.login-btn:hover{
+    background:#115e59;
+}
+
+.cash-btn{
+    background:#b45309;
+    color:white;
+}
+
+.online-btn{
+    background:#15803d;
+    color:white;
+}
+
+.delivered-btn{
+    background:#b91c1c;
+    color:white;
+}
+
+.card{
+    background:#ffffff;
+    border:1px solid #e5e7eb;
+    padding:18px;
+    margin-bottom:16px;
+    border-radius:10px;
+    box-shadow:0 10px 25px rgba(15,23,42,.08);
+}
+
+.order-item{
+    padding:7px 0;
+    border-bottom:1px solid #e5e7eb;
+}
+
+.badge{
+    display:inline-block;
+    padding:6px 10px;
+    border-radius:20px;
+    font-size:12px;
+    background:#e0f2fe;
+    color:#075985;
+    font-weight:700;
+    margin-top:5px;
+}
+
+#orders{
+    margin-top:20px;
+    max-width:760px;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+.loading{
+    text-align:center;
+    padding:20px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="loginBox" class="login-box">
+
+<h2>Owner Login</h2>
+
+<input
+id="username"
+placeholder="Username">
+
+<input
+id="password"
+type="password"
+placeholder="Password">
+
+<button
+class="login-btn"
+onclick="login()">
+Login
+</button>
+
+</div>
+
+<div id="orders"></div>
+
+<script>
+
+// ====================================
+// CONFIG
+// ====================================
+
+const API_URL =
+"https://script.google.com/macros/s/AKfycbzwWtXChtsAoagvDAhDXKxSTs6zuJ6YAgGGXUHCj2b-oEA3sn_wOPRxJ9aJlKzaGGCdeA/exec";
+
+// ====================================
+// SIMPLE LOGIN
+// ====================================
+
+const ADMIN_USER = "karmala";
+const ADMIN_PASS = "foodie";
+
+// ====================================
+// LOGIN
+// ====================================
+
+function login(){
+
+const username =
+document.getElementById("username").value.trim();
+
+const password =
+document.getElementById("password").value.trim();
+
+if(
+username === ADMIN_USER &&
+password === ADMIN_PASS
+){
+
+document.getElementById("loginBox")
+.style.display = "none";
+
+loadOrders();
+
+}
+else{
+
+alert("Invalid username or password");
+
+}
+
+}
+
+// ====================================
+// LOAD ORDERS
+// ====================================
+
+async function loadOrders(){
+
+document.getElementById("orders").innerHTML =
+'<div class="loading">Loading Orders...</div>';
+
+try{
+
+const response =
+await fetch(
+API_URL + "?action=getOrders"
+);
+
+const orders =
+await response.json();
+
+renderOrders(orders);
+
+}
+catch(error){
+
+console.error(error);
+
+document.getElementById("orders").innerHTML =
+"<h3>Unable to load orders.</h3>";
+
+}
+
+}
+
+// ====================================
+// RENDER ORDERS
+// ====================================
+
+function renderOrders(orders){
+
+let html = "<h2>Active Orders</h2>";
+
+if(
+!orders ||
+orders.length === 0
+){
+
+html += "<p>No Active Orders</p>";
+
+document.getElementById("orders").innerHTML =
+html;
+
+return;
+
+}
+
+orders.forEach(order=>{
+
+html += `
+<div class="card">
+
+<h3>${order.orderId}</h3>
+
+<p>
+<b>Type:</b>
+${order.orderType}
+</p>
+
+<p>
+<b>Restaurant:</b>
+${order.restaurant}
+</p>
+
+<p>
+<b>Name:</b>
+${order.name}
+</p>
+
+<p>
+<b>Phone:</b>
+${order.phone}
+</p>
+
+<p>
+<b>Address:</b>
+${order.address}
+</p>
+
+<p>
+<b>Total:</b>
+₹${order.total}
+</p>
+
+<p>
+<b>Payment:</b>
+<span class="badge">
+${order.paymentStatus}
+</span>
+</p>
+
+<p>
+<b>Delivery:</b>
+<span class="badge">
+${order.deliveryStatus}
+</span>
+</p>
+
+<h4>Items</h4>
+
+${renderItems(order.items)}
+
+<button
+class="cash-btn"
+onclick="updatePayment('${order.orderId}','Cash')">
+Cash
+</button>
+
+<button
+class="online-btn"
+onclick="updatePayment('${order.orderId}','Online')">
+Online
+</button>
+
+<button
+class="delivered-btn"
+onclick="markDelivered('${order.orderId}')">
+Delivered
+</button>
+
+</div>
+`;
+
+});
+
+document.getElementById("orders").innerHTML =
+html;
+
+}
+
+// ====================================
+// ITEMS
+// ====================================
+
+function renderItems(items){
+
+let html = "";
+
+try{
+
+const list =
+typeof items === "string"
+? JSON.parse(items)
+: items;
+
+list.forEach(item=>{
+
+html += `
+<div class="order-item">
+
+${item.name}
+<br>
+
+₹${item.price}
+×
+${item.qty}
+
+=
+₹${item.price * item.qty}
+
+</div>
+`;
+
+});
+
+}
+catch(error){
+
+html = "No items";
+
+}
+
+return html;
+
+}
+
+// ====================================
+// PAYMENT
+// ====================================
+
+async function updatePayment(
+orderId,
+status
+){
+
+try{
+
+await fetch(API_URL,{
+method:"POST",
+body:JSON.stringify({
+
+action:"updatePayment",
+orderId:orderId,
+status:status
+
+})
+});
+
+loadOrders();
+
+}
+catch(error){
+
+alert("Payment update failed");
+
+}
+
+}
+
+// ====================================
+// DELIVERED
+// ====================================
+
+async function markDelivered(
+orderId
+){
+
+if(
+!confirm(
+"Mark this order as delivered?"
+)
+){
+return;
+}
+
+try{
+
+await fetch(API_URL,{
+method:"POST",
+body:JSON.stringify({
+
+action:"markDelivered",
+orderId:orderId
+
+})
+});
+
+loadOrders();
+
+}
+catch(error){
+
+alert("Failed to update order");
+
+}
+
+}
+
+// ====================================
+// AUTO REFRESH
+// ====================================
+
+setInterval(()=>{
+
+const loginBox =
+document.getElementById("loginBox");
+
+if(
+loginBox.style.display === "none"
+){
+loadOrders();
+}
+
+},60000);
+
+</script>
+
+</body>
+</html>
